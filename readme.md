@@ -1,5 +1,5 @@
 # Corcavian SEO Plugin
-I built this plugin to easily allow me to overwrite the title and meta description for each of the pages on my wordpress site.
+I built this plugin to easily allow me to overwrite the title and create meta description's for each of the pages on my wordpress site.
 # Install
 * Clone the repository
 * Drag into your wordpress site **/wp-content/plugins** folder
