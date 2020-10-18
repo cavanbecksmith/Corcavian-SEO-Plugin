@@ -60,8 +60,18 @@ class CORCAVIAN_SEO_PLUGIN {
     <tr valign="top">
     <th scope="row"><label for="show_page_title">Use Site title in title tag</label></th>
     <td>
-      <select name="show_page_title" id="cars">
-        <option selected="selected" disabled><?php echo get_option('show_page_title') ?></option>
+      <select name="show_page_title" id="show_page_title">
+        <option selected="selected" value="<?php echo get_option('show_page_title') ?>" ><?php echo get_option('show_page_title') ? 'true' : 'false'; ?></option>
+        <option value="1">true</option>
+        <option value="0">false</option>
+      </select>
+    </td>
+    </tr>
+    <tr valign="top">
+    <th scope="row"><label for="generic_homepage_title">Generic Homepage Title</label></th>
+    <td>
+      <select name="generic_homepage_title" id="generic_homepage_title">
+        <option selected="selected" value="<?php echo get_option('generic_homepage_title') ?>"  hidden><?php echo get_option('generic_homepage_title') ? 'true' : 'false'; ?></option>
         <option value="1">true</option>
         <option value="0">false</option>
       </select>
@@ -76,6 +86,7 @@ class CORCAVIAN_SEO_PLUGIN {
   public function corcavian_register_settings(){
    register_setting( 'corcavian_plugin_options_group', 'blog_homepage'); //, array($this, 'corcavian_register_settings_cb')
    register_setting( 'corcavian_plugin_options_group', 'show_page_title');
+   register_setting( 'corcavian_plugin_options_group', 'generic_homepage_title');
   }
 
   public function corcavian_register_settings_cb(){
@@ -130,6 +141,10 @@ class CORCAVIAN_SEO_PLUGIN {
       $title=$meta_title[0];
     }
 
+    if(is_front_page() && get_option('generic_homepage_title')){
+      $title=get_bloginfo('site_title').' &#8211; '.get_bloginfo( 'description', 'display' );
+    }
+
     return $title;
   }
 
@@ -143,11 +158,14 @@ class CORCAVIAN_SEO_PLUGIN {
       $url_path = parse_url( $url, PHP_URL_PATH );
       $slug = pathinfo( $url_path, PATHINFO_BASENAME );
 
-      $category_base =explode("/", get_option('category_base'));
+      $category_base =empty_array_setter(explode("/", get_option('category_base')));
       $split_str = explode('/', $url_path);
       $blog_homepage = get_option('blog_homepage');
 
-      $category_base = empty_array_setter($category_base);
+      // print_r($category_base);
+      // print_r(get_query_var('s'));
+      // $category_base = empty_array_setter($category_base);
+
 
       // --- Loop for blog default
       for($i = 0; $i < count($split_str); $i++ ){
@@ -155,27 +173,37 @@ class CORCAVIAN_SEO_PLUGIN {
           // Default blog page
           $id = get_option( 'page_for_posts' );
           $test = 1;
+          // echo $test;
         } else if($split_str[$i] == $blog_homepage && $split_str[$i+1] == 'category') {
           // If the blog is using the default permalink and category is selected
           $id = get_option( 'page_for_posts' );
           $test = 2;
+          // echo $test;
         }
 
-        for($z = 0; $z < count($category_base); $z++){
-          
-          if($split_str[$i] == $category_base[$z] && !empty($category_base) && count($category_base) < 2){ // count($category_base) < 1 || !
-            // If there is only one part to the part and is custom permalink
-            $id = get_option( 'page_for_posts' );
-            // $test = $split_str[$i] . ' ' . $category_base[$z];
-            $test = 3;
-          } else if ($split_str[$i] == $category_base[$z] && compare_not_empty($split_str[$i+1], $category_base[$z+1])) {
-            // If there is more than 2 parts of the path and is custom permalink
-            $id = get_option( 'page_for_posts' );
-            // $test = 4;
-            $test = array($category_base[$z+1], $split_str[$i+1]);
+        if(!empty($category_base)){
+          for($z = 0; $z < count($category_base); $z++){
+            
+            if($split_str[$i] == $category_base[$z] && !empty($category_base) && count($category_base) < 2){ // count($category_base) < 1 || !
+              // If there is only one part to the part and is custom permalink
+              $id = get_option( 'page_for_posts' );
+              // $test = $split_str[$i] . ' ' . $category_base[$z];
+              $test = 3;
+              // echo $test;
+            } else if ($split_str[$i] == $category_base[$z] && compare_not_empty($split_str[$i+1], $category_base[$z+1])) {
+              // If there is more than 2 parts of the path and is custom permalink
+              $id = get_option( 'page_for_posts' );
+              // $test = 4;
+              $test = 4;
+              // echo $test;
+            }
           }
         }
-      } 
+      }
+
+      if(is_search()){
+        $id = get_option( 'page_for_posts' );
+      }
 
       $this->test = $test;
       $this->id = $id;
