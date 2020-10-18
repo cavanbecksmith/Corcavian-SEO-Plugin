@@ -9,6 +9,7 @@ $option_name = 'blog_homepage';
  
 delete_option($option_name);
 delete_option('show_page_title');
+delete_option('generic_homepage_title');
 
 global $wpdb;
 
