@@ -12,9 +12,11 @@ License:     GPL v2 or later
 */
 
 include_once 'inc/create_meta_box.php';
+include_once 'inc/helpers.php';
 
 if ( __FILE__ == $_SERVER['SCRIPT_FILENAME'] )
 	die();
+
 
 class CORCAVIAN_SEO_PLUGIN {
 
@@ -94,7 +96,7 @@ class CORCAVIAN_SEO_PLUGIN {
   public function add_links_to_head(){
     $meta_description = get_post_meta( $this->id, '_meta_description' );
     ?>
-    <title><?php wp_title('') ?></title>
+    <title><?php wp_title('');?></title>
     <?php 
     if($meta_description[0] != ''){
     ?>
@@ -145,32 +147,37 @@ class CORCAVIAN_SEO_PLUGIN {
       $split_str = explode('/', $url_path);
       $blog_homepage = get_option('blog_homepage');
 
+      $category_base = empty_array_setter($category_base);
+
       // --- Loop for blog default
       for($i = 0; $i < count($split_str); $i++ ){
         if($split_str[$i] == $blog_homepage && !$split_str[$i+1]){
           // Default blog page
           $id = get_option( 'page_for_posts' );
+          $test = 1;
         } else if($split_str[$i] == $blog_homepage && $split_str[$i+1] == 'category') {
           // If the blog is using the default permalink and category is selected
           $id = get_option( 'page_for_posts' );
+          $test = 2;
+        }
+
+        for($z = 0; $z < count($category_base); $z++){
+          
+          if($split_str[$i] == $category_base[$z] && !empty($category_base) && count($category_base) < 2){ // count($category_base) < 1 || !
+            // If there is only one part to the part and is custom permalink
+            $id = get_option( 'page_for_posts' );
+            // $test = $split_str[$i] . ' ' . $category_base[$z];
+            $test = 3;
+          } else if ($split_str[$i] == $category_base[$z] && compare_not_empty($split_str[$i+1], $category_base[$z+1])) {
+            // If there is more than 2 parts of the path and is custom permalink
+            $id = get_option( 'page_for_posts' );
+            // $test = 4;
+            $test = array($category_base[$z+1], $split_str[$i+1]);
+          }
         }
       } 
 
-      // -- Loop for custom permalink on category
-      for($i = 0; $i < count($split_str); $i++){
-        // echo $i . '<br/>';
-        for($z = 0; $z < count($category_base); $z++){
-          
-          if($split_str[$i] == $category_base[$z] && count($category_base) < 2){
-            // If there is only one part to the part and is custom permalink
-            $id = get_option( 'page_for_posts' );
-          } else if ($split_str[$i] == $category_base[$z] && $split_str[$i+1] == $category_base[$z+1]) {
-            // If there is more than 2 parts of the path and is custom permalink
-            $id = get_option( 'page_for_posts' );
-          }
-        }
-      }
-
+      $this->test = $test;
       $this->id = $id;
 
     }
